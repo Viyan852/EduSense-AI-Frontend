@@ -1,0 +1,313 @@
+# EduSense AI — Demo Server Setup
+
+The repository includes `demo_server.py`, a lightweight demonstration backend for testing the EduSense AI dashboard without requiring the complete Raspberry Pi, AI models, or classroom hardware.
+
+The demo server provides test API data and can be used to verify that the frontend correctly connects to a backend and updates its dashboard.
+
+---
+
+## Requirements
+
+Before running the demo server, install:
+
+* Python 3.10 or newer
+* Flask
+* Flask-CORS
+* OpenCV-Python (only required if webcam functionality is enabled in your `demo_server.py`)
+
+---
+
+## Install Python
+
+Download Python from the official Python website:
+
+https://www.python.org/downloads/
+
+During installation on Windows, make sure:
+
+```
+Add Python to PATH
+```
+
+is enabled.
+
+Verify the installation:
+
+```
+python --version
+```
+
+You should see something similar to:
+
+```
+Python 3.x.x
+```
+
+---
+
+## Install Demo Server Libraries
+
+Open Command Prompt or Terminal inside the EduSense project folder.
+
+Run:
+
+```
+python -m pip install flask flask-cors opencv-python
+```
+
+If your demo server does not use the webcam/OpenCV functionality, you can install only:
+
+```
+python -m pip install flask flask-cors
+```
+
+---
+
+## Run the Demo Server
+
+Navigate to the folder containing `demo_server.py`.
+
+Example:
+
+```
+cd Desktop\EduSense
+```
+
+Then run:
+
+```
+python demo_server.py
+```
+
+If everything is configured correctly, the terminal should display the Flask server address.
+
+For example:
+
+```
+Running on http://127.0.0.1:5000
+```
+
+Keep this terminal window open while using the dashboard.
+
+---
+
+## Test the API
+
+Open your browser and visit:
+
+```
+http://127.0.0.1:5000/api/data
+```
+
+The server should return JSON data.
+
+Example:
+
+```
+{
+  "total_students": 30,
+  "unknown_faces": 2,
+  "engagement": 87,
+  "noise": 42,
+  "cpu": 35,
+  "ram": 61,
+  "temperature": 48,
+  "fps": 25
+}
+```
+
+The exact response depends on the implementation of `demo_server.py`.
+
+---
+
+## Connect the EduSense Dashboard
+
+Open:
+
+```
+index.html
+```
+
+In the dashboard's backend connection field, enter:
+
+```
+http://127.0.0.1:5000
+```
+
+Then click:
+
+```
+Connect
+```
+
+The dashboard should connect to the demo server and begin receiving data.
+
+---
+
+## Webcam Demo
+
+If your version of `demo_server.py` includes webcam support, make sure:
+
+1. A webcam is connected.
+2. Windows/browser has permission to access the camera.
+3. OpenCV is installed.
+4. `demo_server.py` is running.
+5. The dashboard is connected to the demo server.
+
+The webcam functionality is intended for demonstration/testing and does not replace the production Raspberry Pi camera/AI pipeline.
+
+---
+
+## Running From Another Device
+
+By default, a local server may only be accessible from the same computer.
+
+If the demo server is configured to listen on the local network, other devices on the same Wi-Fi/LAN can connect using the host computer's local IP address.
+
+Example:
+
+```
+http://192.168.1.50:5000
+```
+
+The exact IP address depends on the computer running the server.
+
+On Windows, find the local IP with:
+
+```
+ipconfig
+```
+
+Look for:
+
+```
+IPv4 Address
+```
+
+---
+
+## Troubleshooting
+
+### `python` is not recognized
+
+Try:
+
+```
+py --version
+```
+
+If that works, run the server with:
+
+```
+py demo_server.py
+```
+
+If neither command works, reinstall Python and enable:
+
+```
+Add Python to PATH
+```
+
+---
+
+### `No module named flask`
+
+Install Flask:
+
+```
+python -m pip install flask
+```
+
+---
+
+### `No module named flask_cors`
+
+Install Flask-CORS:
+
+```
+python -m pip install flask-cors
+```
+
+---
+
+### `No module named cv2`
+
+Install OpenCV:
+
+```
+python -m pip install opencv-python
+```
+
+---
+
+### Port 5000 is already in use
+
+Another program may already be using port 5000.
+
+Stop the other program or change the Flask port in `demo_server.py` if the server supports it.
+
+---
+
+### Dashboard cannot connect
+
+Check:
+
+* `demo_server.py` is running.
+* The URL is correct.
+* `/api/data` opens successfully in the browser.
+* The correct port is being used.
+* Windows Firewall is not blocking the server.
+* Both devices are on the same network when using another device.
+
+---
+
+## Recommended Installation
+
+For the complete demo environment, simply run:
+
+```
+python -m pip install flask flask-cors opencv-python
+```
+
+Then:
+
+```
+python demo_server.py
+```
+
+And connect the dashboard to:
+
+```
+http://127.0.0.1:5000
+```
+
+---
+
+## Demo Architecture
+
+```
+index.html
+      │
+      │ HTTP requests
+      ▼
+demo_server.py
+      │
+      ├── Demo API data
+      │
+      └── Optional webcam/OpenCV
+      
+```
+
+This demo server is intended to test the EduSense frontend before connecting it to the real EduSense AI backend and hardware.
+
+---
+
+## Important
+
+`demo_server.py` is a development/demo server.
+
+It is **not the production AI backend**.
+
+The production system is expected to provide real classroom data from the appropriate camera, sensors, AI models and hardware.
+
+Do not use the demo values as real classroom measurements.

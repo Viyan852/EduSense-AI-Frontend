@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense AI - Smart Classroom Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+    
+    <!-- External Libraries (Allowed CDNs) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* =========================================================
+           CSS VARIABLES & DESIGN SYSTEM
+           ========================================================= */
+        :root {
+            /* Dark Theme (Default) */
+            --bg-base: #0f1117;
+            --bg-surface: #1a1d27;
+            --bg-surface-hover: #232736;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #2e3344;
+            
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --unknown: #8b5cf6;
+            
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Space Grotesk', monospace;
+            
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+            
+            --transition: all 0.2s ease-in-out;
+        }
+
+        [data-theme="light"] {
+            --bg-base: #f1f5f9;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* =========================================================
+           RESET & GLOBAL
+           ========================================================= */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-sans);
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        button {
+            cursor: pointer;
+            font-family: inherit;
+            border: none;
+            background: none;
+            color: inherit;
+            outline: none;
+        }
+
+        input {
+            font-family: inherit;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-md);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .hidden { display: none !important; }
+
+        /* =========================================================
+           TOP NAVIGATION BAR
+           ========================================================= */
+        .topbar {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .brand-icon { color: var(--primary); }
+
+        .connection-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-base);
+            padding: 0.25rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+        }
+
+        .dot.live { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot.error { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .dot.connecting { background-color: var(--warning); animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .btn-primary { background-color: var(--primary); color: #fff; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger); color: #fff; }
+        .btn-icon { padding: 0.5rem; border-radius: var(--radius-md); color: var(--text-muted); }
+        .btn-icon:hover { background-color: var(--bg-surface-hover); color: var(--text-main); }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .timestamp {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        /* =========================================================
+           DASHBOARD LAYOUT
+           ========================================================= */
+        .container {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-source-badge {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        .data-source-badge.live { color: var(--success); border-color: var(--success); }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .metric-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--bg-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+
+        .metric-content { flex: 1; }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-main);
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Camera */
+        .camera-container {
+            background-color: #000;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+
+        .camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .camera-controls {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            z-index: 20;
+        }
+
+        /* Charts */
+        .chart-wrapper {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Tables & Lists */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th, .data-table td {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            padding-top: 0;
+        }
+
+        .data-table tbody tr:hover { background-color: var(--bg-base); }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 0.75rem;
+            background: var(--bg-base);
+            border-radius: var(--radius-md);
+            border-left: 3px solid var(--border);
+            font-size: 0.875rem;
+        }
+        
+        .log-item.error { border-left-color: var(--danger); }
+        .log-item.warning { border-left-color: var(--warning); }
+        .log-item.info { border-left-color: var(--info); }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* System Telemetry Compact */
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        .telemetry-row:last-child { border-bottom: none; }
+        .telemetry-label { color: var(--text-muted); font-size: 0.875rem; }
+        .telemetry-val { font-family: var(--font-mono); font-weight: 600; }
+
+        /* =========================================================
+           DEBUG PANEL
+           ========================================================= */
+        #debug-panel {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 40vh;
+            background: rgba(15, 17, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--primary);
+            color: #fff;
+            z-index: 9999;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            font-family: var(--font-mono);
+            transform: translateY(100%);
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+        }
+        #debug-panel.open { transform: translateY(0); }
+        .debug-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .debug-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1rem;
+            overflow: hidden;
+            flex: 1;
+        }
+        .debug-col {
+            overflow-y: auto;
+            background: #000;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+        .debug-col pre { white-space: pre-wrap; word-wrap: break-word; color: #a5b4fc; }
+
+        /* Toasts */
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 10000;
+        }
+        .toast {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 250px;
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .topbar { flex-direction: column; gap: 1rem; align-items: stretch; }
+            .topbar-right { justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <header class="topbar">
+        <div class="brand">
+            <i data-lucide="cpu" class="brand-icon"></i>
+            EduSense AI
+        </div>
+
+        <div class="connection-panel">
+            <div class="status-indicator" id="conn-status-ui">
+                <span class="dot" id="conn-dot"></span>
+                <span id="conn-text">Disconnected</span>
+            </div>
+            <input type="text" id="api-url" placeholder="http://192.168.1.100:5000" style="width: 250px;">
+            <button class="btn btn-primary" id="btn-connect">Connect</button>
+            <button class="btn btn-danger hidden" id="btn-disconnect">Stop</button>
+        </div>
+
+        <div class="topbar-right">
+            <div class="timestamp">
+                <div id="sys-time">00:00:00</div>
+                <div style="font-size: 0.65rem; margin-top: 2px;">Last Data: <span id="last-update">Never</span></div>
+            </div>
+            <button class="btn-icon" id="btn-theme" title="Toggle Theme">
+                <i data-lucide="moon" id="theme-icon"></i>
+            </button>
+            <button class="btn-icon" title="Debug Panel (Ctrl+Shift+D)" onclick="app.debug.toggle()">
+                <i data-lucide="terminal"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="container">
+        
+        <!-- KPI METRICS ROW -->
+        <section class="metrics-grid">
+            <div class="card metric-card">
+                <div class="metric-icon-box" style="color: var(--primary)"><i data-lucide="users"></i></div>
+                <div class="metric-content">
+                    <div class="metric-label">Attendance / Total</div>
+                    <div class="metric-value" id="val-attendance">--/--</div>
+                </div>
+                <div class="data-source-badge" id="src-attendance">Wait</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon-box" style="color: var(--unknown)"><i data-lucide="user-x"></i></div>
+                <div class="metric-content">
+                    <div class="metric-label">Unknown Faces</div>
+                    <div class="metric-value" id="val-unknown">--</div>
+                </div>
+                <div class="data-source-badge" id="src-unknown">Wait</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon-box" style="color: var(--warning)"><i data-lucide="activity"></i></div>
+                <div class="metric-content">
+                    <div class="metric-label">Class Engagement</div>
+                    <div class="metric-value" id="val-engagement">--</div>
+                </div>
+                <div class="data-source-badge" id="src-engagement">Wait</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon-box" style="color: var(--info)"><i data-lucide="volume-2"></i></div>
+                <div class="metric-content">
+                    <div class="metric-label">Noise Level</div>
+                    <div class="metric-value" id="val-noise">--</div>
+                </div>
+                <div class="data-source-badge" id="src-noise">Wait</div>
+            </div>
+        </section>
+
+        <!-- MAIN CONTENT GRID -->
+        <section class="content-grid">
+            
+            <!-- LEFT COLUMN -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- CAMERA PANEL -->
+                <div class="card" style="padding: 1rem;">
+                    <div class="card-header" style="border: none; padding: 0; margin-bottom: 1rem;">
+                        <div class="card-title"><i data-lucide="camera"></i> Live Classroom Feed</div>
+                        <div class="data-source-badge" id="src-camera">Wait</div>
+                    </div>
+                    <div class="camera-container" id="camera-container">
+                        <div class="camera-overlay" id="camera-overlay">
+                            <i data-lucide="video-off" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+                            <span id="camera-msg">Camera Unavailable</span>
+                        </div>
+                        <img id="camera-feed" class="camera-feed hidden" crossorigin="anonymous" alt="Live Feed">
+                        
+                        <div class="camera-controls">
+                            <button class="btn btn-primary btn-icon" id="btn-cam-refresh" title="Reload Feed" style="background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #fff;">
+                                <i data-lucide="refresh-cw"></i>
+                            </button>
+                            <button class="btn btn-primary btn-icon" id="btn-fullscreen" title="Fullscreen" style="background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #fff;">
+                                <i data-lucide="maximize"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDENT ROSTER -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="list-checks"></i> Recognized Students</div>
+                        <div class="data-source-badge" id="src-faces">Wait</div>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 300px;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Confidence</th>
+                                    <th>Emotion</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-students">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Waiting for backend data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- SYSTEM TELEMETRY -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="server"></i> System Telemetry</div>
+                        <div class="data-source-badge" id="src-system">Wait</div>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">CPU Usage</span>
+                        <span class="telemetry-val" id="val-cpu">--</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Memory (RAM)</span>
+                        <span class="telemetry-val" id="val-ram">--</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Core Temp</span>
+                        <span class="telemetry-val" id="val-temp">--</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Processing FPS</span>
+                        <span class="telemetry-val" id="val-fps">--</span>
+                    </div>
+                    <div class="telemetry-row">
+                        <span class="telemetry-label">Teacher Status</span>
+                        <span class="telemetry-val" id="val-teacher">--</span>
+                    </div>
+                </div>
+
+                <!-- EMOTIONS CHART -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="smile"></i> Emotion Distribution</div>
+                        <div class="data-source-badge" id="src-emotions">Wait</div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <div id="chart-emotions-overlay" style="position:absolute; color:var(--text-muted); font-size:0.875rem;">Waiting for data...</div>
+                        <canvas id="chart-emotions"></canvas>
+                    </div>
+                </div>
+
+                <!-- LOGS & ALERTS -->
+                <div class="card" style="flex: 1;">
+                    <div class="card-header">
+                        <div class="card-title"><i data-lucide="alert-circle"></i> System Events</div>
+                        <div class="data-source-badge" id="src-logs">Wait</div>
+                    </div>
+                    <div class="log-list" id="list-logs">
+                        <div style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1rem;">No events recorded</div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- DEBUG PANEL -->
+    <div id="debug-panel">
+        <div class="debug-header">
+            <h3 style="font-family: var(--font-mono); font-size: 1rem; color: var(--primary);">Developer API Inspector</h3>
+            <button class="btn-icon" onclick="app.debug.toggle()" style="color: #fff;"><i data-lucide="x"></i></button>
+        </div>
+        <div class="debug-content">
+            <div class="debug-col">
+                <div style="color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Connection Stats</div>
+                <div id="debug-stats">
+                    URL: --<br>
+                    State: --<br>
+                    Last Poll: --<br>
+                    Errors: 0
+                </div>
+            </div>
+            <div class="debug-col">
+                <div style="color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Raw JSON Payload (Latest)</div>
+                <pre id="debug-json">No data received yet.</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toast-container"></div>
+
+
+    <!-- =========================================================
+         JAVASCRIPT LOGIC
+         ========================================================= -->
+    <script>
+        /**
+         * EDUSENSE AI - Core Frontend Logic
+         * STRICT RULE: NO FAKE DATA. ALL VALUES DERIVED FROM BACKEND.
+         */
+
+        // ---------------------------------------------------------
+        // UTILITIES
+        // ---------------------------------------------------------
+        class Utils {
+            static escapeHTML(str) {
+                if (str === null || str === undefined) return '';
+                const div = document.createElement('div');
+                div.textContent = str.toString();
+                return div.innerHTML;
+            }
+
+            static formatTime(date) {
+                return date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+
+            static isNumeric(val) {
+                return val !== null && val !== undefined && !isNaN(val) && val !== '';
+            }
+        }
+
+        // ---------------------------------------------------------
+        // LOCAL STORAGE
+        // ---------------------------------------------------------
+        class StorageManager {
+            static get(key, fallback) {
+                try {
+                    const item = localStorage.getItem(`edu_${key}`);
+                    return item ? JSON.parse(item) : fallback;
+                } catch { return fallback; }
+            }
+            static set(key, value) {
+                try { localStorage.setItem(`edu_${key}`, JSON.stringify(value)); } catch {}
+            }
+        }
+
+        // ---------------------------------------------------------
+        // THEME MANAGER
+        // ---------------------------------------------------------
+        class ThemeManager {
+            constructor() {
+                this.theme = StorageManager.get('theme', null);
+                if (!this.theme) {
+                    this.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                this.apply();
+                document.getElementById('btn-theme').addEventListener('click', () => this.toggle());
+            }
+
+            apply() {
+                document.documentElement.setAttribute('data-theme', this.theme);
+                const icon = document.getElementById('theme-icon');
+                if (icon) {
+                    icon.setAttribute('data-lucide', this.theme === 'dark' ? 'sun' : 'moon');
+                    if (window.lucide) lucide.createIcons();
+                }
+                if (window.app && window.app.charts) {
+                    window.app.charts.updateColors();
+                }
+            }
+
+            toggle() {
+                this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                StorageManager.set('theme', this.theme);
+                this.apply();
+            }
+        }
+
+        // ---------------------------------------------------------
+        // NOTIFICATION & DEBUG MANAGERS
+        // ---------------------------------------------------------
+        class NotificationManager {
+            constructor() {
+                this.container = document.getElementById('toast-container');
+            }
+            show(msg, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                
+                let icon = 'info', color = 'var(--info)';
+                if (type === 'error') { icon = 'alert-octagon'; color = 'var(--danger)'; }
+                if (type === 'success') { icon = 'check-circle'; color = 'var(--success)'; }
+                if (type === 'warning') { icon = 'alert-triangle'; color = 'var(--warning)'; }
+
+                toast.innerHTML = `<i data-lucide="${icon}" style="color: ${color}"></i><span style="font-size: 0.875rem; font-weight: 500;">${Utils.escapeHTML(msg)}</span>`;
+                this.container.appendChild(toast);
+                if (window.lucide) lucide.createIcons({ root: toast });
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        class DebugManager {
+            constructor() {
+                this.panel = document.getElementById('debug-panel');
+                this.jsonEl = document.getElementById('debug-json');
+                this.statsEl = document.getElementById('debug-stats');
+                this.errors = 0;
+                this.isOpen = false;
+
+                window.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd') {
+                        e.preventDefault();
+                        this.toggle();
+                    }
+                });
+            }
+            toggle() {
+                this.isOpen = !this.isOpen;
+                if (this.isOpen) {
+                    this.panel.classList.add('open');
+                } else {
+                    this.panel.classList.remove('open');
+                }
+            }
+            update(url, state, lastPoll, rawJson) {
+                this.statsEl.innerHTML = `
+                    URL: ${Utils.escapeHTML(url || 'None')}<br>
+                    State: ${Utils.escapeHTML(state)}<br>
+                    Last Poll: ${Utils.escapeHTML(lastPoll)}<br>
+                    Errors: ${this.errors}
+                `;
+                if (rawJson) {
+                    try {
+                        this.jsonEl.textContent = JSON.stringify(rawJson, null, 2);
+                    } catch {
+                        this.jsonEl.textContent = 'Invalid JSON structure';
+                    }
+                }
+            }
+            logError() { this.errors++; }
+        }
+
+        // ---------------------------------------------------------
+        // DATA NORMALIZER (Adapter Layer)
+        // STRICT RULE: Return null if missing. NEVER INVENT.
+        // ---------------------------------------------------------
+        class DataNormalizer {
+            static normalize(raw) {
+                if (!raw || typeof raw !== 'object') return null;
+
+                const getVal = (paths) => {
+                    for (const p of paths) {
+                        const parts = p.split('.');
+                        let obj = raw;
+                        for (const part of parts) {
+                            if (obj && obj.hasOwnProperty(part)) {
+                                obj = obj[part];
+                            } else {
+                                obj = undefined;
+                                break;
+                            }
+                        }
+                        if (obj !== undefined && obj !== null) return obj;
+                    }
+                    return null;
+                };
+
+                return {
+                    // Attendance / Students
+                    students_present: getVal(['students', 'present_count', 'attendance.present']),
+                    students_total: getVal(['total_students', 'total', 'attendance.total']),
+                    unknown_faces: getVal(['unknown', 'unknown_faces', 'unknown_count']),
+                    
+                    // Analytics
+                    engagement: getVal(['engagement', 'engagement_score', 'metrics.engagement']),
+                    noise: getVal(['noise', 'noise_level', 'db', 'sound']),
+                    
+                    // System
+                    cpu: getVal(['cpu', 'cpu_percent', 'system.cpu', 'telemetry.cpu']),
+                    ram: getVal(['ram', 'ram_percent', 'memory', 'system.ram']),
+                    temp: getVal(['temperature', 'temp', 'core_temp', 'system.temp']),
+                    fps: getVal(['fps', 'camera_fps', 'system.fps']),
+                    
+                    // Teacher
+                    teacher: getVal(['teacher', 'teacher_present', 'teacher_status']),
+                    
+                    // Emotions map
+                    emotions: getVal(['emotions', 'emotion_data', 'mood']),
+                    
+                    // Camera
+                    camera_url: getVal(['camera_url', 'stream_url', 'video_url', 'mjpeg_url']),
+                    
+                    // Arrays
+                    faces: Array.isArray(getVal(['faces', 'recognized_faces', 'students_list'])) ? getVal(['faces', 'recognized_faces', 'students_list']) : [],
+                    logs: Array.isArray(getVal(['logs', 'events'])) ? getVal(['logs', 'events']) : [],
+                    alerts: Array.isArray(getVal(['alerts', 'warnings'])) ? getVal(['alerts', 'warnings']) : []
+                };
+            }
+        }
+
+        // ---------------------------------------------------------
+        // CHART MANAGER
+        // ---------------------------------------------------------
+        class ChartManager {
+            constructor() {
+                this.emotionsChart = null;
+                this.initCharts();
+            }
+
+            initCharts() {
+                if (typeof Chart === 'undefined') return;
+                
+                Chart.defaults.font.family = 'Inter, sans-serif';
+                Chart.defaults.color = 'var(--text-muted)';
+                Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 17, 23, 0.9)';
+
+                const ctx = document.getElementById('chart-emotions');
+                if (ctx) {
+                    this.emotionsChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Happy', 'Neutral', 'Surprise', 'Sad', 'Angry'],
+                            datasets: [{
+                                data: [], // Empty initially
+                                backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#94a3b8', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            cutout: '75%',
+                            plugins: {
+                                legend: { position: 'right', labels: { boxWidth: 12 } }
+                            }
+                        }
+                    });
+                }
+            }
+
+            updateEmotions(emotionsObj) {
+                const overlay = document.getElementById('chart-emotions-overlay');
+                if (!this.emotionsChart) return;
+                
+                if (!emotionsObj || Object.keys(emotionsObj).length === 0) {
+                    // No data, clear chart
+                    this.emotionsChart.data.datasets[0].data = [];
+                    this.emotionsChart.update();
+                    if(overlay) overlay.style.display = 'block';
+                    return;
+                }
+                
+                if(overlay) overlay.style.display = 'none';
+
+                // Map backend keys to our array order safely
+                const mapVal = (keys) => {
+                    for(const k of keys) {
+                        if(emotionsObj[k] !== undefined) return emotionsObj[k];
+                    }
+                    return 0;
+                };
+
+                this.emotionsChart.data.datasets[0].data = [
+                    mapVal(['happy', 'Happy']),
+                    mapVal(['neutral', 'Neutral']),
+                    mapVal(['surprise', 'Surprise', 'surprised']),
+                    mapVal(['sad', 'Sad']),
+                    mapVal(['angry', 'Angry', 'anger'])
+                ];
+                this.emotionsChart.update();
+            }
+
+            updateColors() {
+                if (this.emotionsChart && typeof Chart !== 'undefined') {
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+                    this.emotionsChart.update();
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // DASHBOARD MANAGER (UI Updates)
+        // ---------------------------------------------------------
+        class DashboardManager {
+            constructor() {
+                this.els = {
+                    att: document.getElementById('val-attendance'),
+                    unk: document.getElementById('val-unknown'),
+                    eng: document.getElementById('val-engagement'),
+                    noi: document.getElementById('val-noise'),
+                    cpu: document.getElementById('val-cpu'),
+                    ram: document.getElementById('val-ram'),
+                    tmp: document.getElementById('val-temp'),
+                    fps: document.getElementById('val-fps'),
+                    tch: document.getElementById('val-teacher'),
+                    
+                    camImg: document.getElementById('camera-feed'),
+                    camOverlay: document.getElementById('camera-overlay'),
+                    camMsg: document.getElementById('camera-msg'),
+                    camContainer: document.getElementById('camera-container'),
+                    
+                    tableStudents: document.getElementById('table-students'),
+                    listLogs: document.getElementById('list-logs'),
+                    
+                    srcFlags: {
+                        att: document.getElementById('src-attendance'),
+                        unk: document.getElementById('src-unknown'),
+                        eng: document.getElementById('src-engagement'),
+                        noi: document.getElementById('src-noise'),
+                        sys: document.getElementById('src-system'),
+                        tch: document.getElementById('src-teacher'),
+                        cam: document.getElementById('src-camera'),
+                        fac: document.getElementById('src-faces'),
+                        emo: document.getElementById('src-emotions'),
+                        log: document.getElementById('src-logs'),
+                    }
+                };
+
+                this.currentCamUrl = null;
+                
+                // Fullscreen handling
+                document.getElementById('btn-fullscreen').addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        this.els.camContainer.requestFullscreen().catch(err => {
+                            window.app.notify.show('Fullscreen error: ' + err.message, 'error');
+                        });
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
+
+                document.getElementById('btn-cam-refresh').addEventListener('click', () => {
+                    if (this.currentCamUrl) {
+                        // Force image reload by appending cache-bust
+                        const url = new URL(this.currentCamUrl, window.location.href);
+                        url.searchParams.set('_t', Date.now());
+                        this.els.camImg.src = url.toString();
+                        window.app.notify.show('Camera feed refreshed');
+                    }
+                });
+            }
+
+            setMetric(elId, value, suffix = '', sourceId = null) {
+                const el = this.els[elId];
+                if (!el) return;
+                
+                if (value === null || value === undefined) {
+                    el.textContent = '--';
+                    this.setSource(sourceId, 'Unavailable');
+                } else {
+                    el.textContent = `${value}${suffix}`;
+                    this.setSource(sourceId, 'Live');
+                }
+            }
+
+            setSource(id, state) {
+                if (!id) return;
+                const el = this.els.srcFlags[id];
+                if (!el) return;
+                el.textContent = state;
+                if (state === 'Live') {
+                    el.classList.add('live');
+                } else {
+                    el.classList.remove('live');
+                }
+            }
+
+            resetUI() {
+                const ids = ['att','unk','eng','noi','cpu','ram','tmp','fps','tch'];
+                ids.forEach(id => this.setMetric(id, null, '', id === 'att' ? 'att' : id));
+                
+                Object.values(this.els.srcFlags).forEach(el => {
+                    if(el) { el.textContent = 'Offline'; el.classList.remove('live'); }
+                });
+
+                this.els.tableStudents.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Data unavailable</td></tr>`;
+                this.els.listLogs.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1rem;">No events recorded</div>`;
+                
+                this.handleCamera(null);
+                if (window.app && window.app.charts) window.app.charts.updateEmotions(null);
+            }
+
+            handleCamera(url) {
+                if (url) {
+                    if (this.currentCamUrl !== url) {
+                        this.els.camImg.src = url;
+                        this.currentCamUrl = url;
+                    }
+                    this.els.camImg.classList.remove('hidden');
+                    this.els.camOverlay.classList.add('hidden');
+                    this.setSource('cam', 'Live');
+                } else {
+                    this.els.camImg.classList.add('hidden');
+                    this.els.camImg.src = '';
+                    this.currentCamUrl = null;
+                    this.els.camOverlay.classList.remove('hidden');
+                    this.setSource('cam', 'Unavailable');
+                }
+            }
+
+            update(data) {
+                // Attendance
+                if (Utils.isNumeric(data.students_present)) {
+                    const total = Utils.isNumeric(data.students_total) ? data.students_total : '--';
+                    this.els.att.textContent = `${data.students_present}/${total}`;
+                    this.setSource('att', 'Live');
+                } else {
+                    this.setMetric('att', null, '', 'att');
+                }
+
+                // KPIs
+                this.setMetric('unk', data.unknown_faces, '', 'unk');
+                if (data.unknown_faces > 0) this.els.unk.style.color = 'var(--danger)';
+                else this.els.unk.style.color = 'var(--text-main)';
+
+                this.setMetric('eng', data.engagement, '%', 'eng');
+                this.setMetric('noi', data.noise, ' dB', 'noi');
+                
+                // System
+                this.setMetric('cpu', data.cpu, '%', 'sys');
+                this.setMetric('ram', data.ram, '%');
+                this.setMetric('tmp', data.temp, '°C');
+                this.setMetric('fps', data.fps, '');
+
+                // Teacher
+                let tchStr = null;
+                if (data.teacher === true || data.teacher === 'true' || data.teacher === 'Present') tchStr = 'Present';
+                else if (data.teacher === false || data.teacher === 'false' || data.teacher === 'Absent') tchStr = 'Absent';
+                this.setMetric('tch', tchStr);
+
+                // Camera
+                // Note: The backend must explicitly provide the URL. We do not invent it.
+                this.handleCamera(data.camera_url);
+
+                // Faces Table
+                if (data.faces && data.faces.length > 0) {
+                    const html = data.faces.map(f => {
+                        const name = Utils.escapeHTML(f.name || 'Unknown');
+                        const conf = Utils.isNumeric(f.confidence) ? `${f.confidence}%` : '--';
+                        const emo = Utils.escapeHTML(f.emotion || '--');
+                        const stat = Utils.escapeHTML(f.status || '--');
+                        return `<tr>
+                            <td style="font-weight: 500;">${name}</td>
+                            <td>${conf}</td>
+                            <td>${emo}</td>
+                            <td>${stat}</td>
+                        </tr>`;
+                    }).join('');
+                    this.els.tableStudents.innerHTML = html;
+                    this.setSource('fac', 'Live');
+                } else {
+                    this.els.tableStudents.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No faces detected</td></tr>`;
+                    this.setSource('fac', data.faces ? 'Live (0)' : 'Unavailable');
+                }
+
+                // Logs and Alerts merging
+                let combinedLogs = [];
+                if (data.logs) combinedLogs = combinedLogs.concat(data.logs.map(l => ({...l, _type: 'info'})));
+                if (data.alerts) combinedLogs = combinedLogs.concat(data.alerts.map(a => ({...a, _type: 'error'})));
+                
+                if (combinedLogs.length > 0) {
+                    // Sort descending if timestamp exists, otherwise assume backend order
+                    combinedLogs.sort((a,b) => (b.timestamp || b.time || 0) - (a.timestamp || a.time || 0));
+                    
+                    const html = combinedLogs.slice(0, 50).map(log => {
+                        const msg = Utils.escapeHTML(log.message || log.msg || 'Unknown event');
+                        const type = Utils.escapeHTML(log.type || log.severity || log._type || 'info').toLowerCase();
+                        
+                        let cssClass = 'info';
+                        if (type.includes('err') || type.includes('crit') || type.includes('dang')) cssClass = 'error';
+                        if (type.includes('warn')) cssClass = 'warning';
+                        
+                        const timeStr = (log.timestamp || log.time) ? Utils.formatTime(new Date(log.timestamp || log.time)) : '--:--:--';
+                        
+                        return `<div class="log-item ${cssClass}">
+                            <div class="log-header"><span>${type.toUpperCase()}</span><span>${timeStr}</span></div>
+                            <div>${msg}</div>
+                        </div>`;
+                    }).join('');
+                    this.els.listLogs.innerHTML = html;
+                    this.setSource('log', 'Live');
+                } else {
+                    this.els.listLogs.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 0.875rem; padding: 1rem;">No events recorded</div>`;
+                    this.setSource('log', (data.logs || data.alerts) ? 'Live (Empty)' : 'Unavailable');
+                }
+
+                if (window.app && window.app.charts) {
+                    window.app.charts.updateEmotions(data.emotions);
+                    this.setSource('emo', data.emotions ? 'Live' : 'Unavailable');
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // CONNECTION & API MANAGER
+        // ---------------------------------------------------------
+        class APIManager {
+            constructor(onData, onStatus) {
+                this.onData = onData;
+                this.onStatus = onStatus; // state: 'DISCONNECTED', 'CONNECTING', 'CONNECTED', 'ERROR'
+                
+                this.baseUrl = StorageManager.get('api_url', '');
+                this.isPolling = false;
+                this.pollIntervalMs = 3000;
+                this.retryCount = 0;
+                this.maxRetries = 5;
+                this.abortController = null;
+                this.lastUpdate = null;
+            }
+
+            setBaseUrl(url) {
+                // Ensure format is basic http/https
+                if (url && !url.startsWith('http')) url = 'http://' + url;
+                // Remove trailing slash
+                if (url && url.endsWith('/')) url = url.slice(0, -1);
+                
+                this.baseUrl = url;
+                StorageManager.set('api_url', url);
+            }
+
+            connect() {
+                if (!this.baseUrl) {
+                    this.onStatus('ERROR', 'Invalid URL');
+                    return;
+                }
+                this.isPolling = true;
+                this.retryCount = 0;
+                this.onStatus('CONNECTING');
+                this.poll();
+            }
+
+            disconnect() {
+                this.isPolling = false;
+                if (this.abortController) this.abortController.abort();
+                this.onStatus('DISCONNECTED');
+            }
+
+            async poll() {
+                if (!this.isPolling) return;
+
+                this.abortController = new AbortController();
+                const timeoutId = setTimeout(() => this.abortController.abort(), 2500); // 2.5s strict timeout
+
+                let endpoint = `${this.baseUrl}/api/data`;
+
+                try {
+                    const response = await fetch(endpoint, {
+                        signal: this.abortController.signal,
+                        headers: { 'Accept': 'application/json' },
+                        cache: 'no-store'
+                    });
+                    
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                    
+                    const rawJson = await response.json();
+                    
+                    this.retryCount = 0; // Reset retries on success
+                    this.lastUpdate = new Date();
+                    
+                    this.onStatus('CONNECTED');
+                    
+                    // Update Debug Panel
+                    if (window.app && window.app.debug) {
+                        window.app.debug.update(this.baseUrl, 'Connected', Utils.formatTime(this.lastUpdate), rawJson);
+                    }
+
+                    // Strict Normalization (No Fake Data)
+                    const normalized = DataNormalizer.normalize(rawJson);
+                    this.onData(normalized, this.lastUpdate);
+
+                    // Schedule next immediately
+                    if (this.isPolling) setTimeout(() => this.poll(), this.pollIntervalMs);
+
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    
+                    // Check if deliberately aborted
+                    if (error.name === 'AbortError' && !this.isPolling) return;
+
+                    if (window.app && window.app.debug) {
+                        window.app.debug.logError();
+                        window.app.debug.update(this.baseUrl, `Error: ${error.message}`, Utils.formatTime(new Date()), null);
+                    }
+
+                    this.retryCount++;
+                    const backoff = Math.min(30000, Math.pow(2, this.retryCount) * 1000); // Max 30s
+                    
+                    this.onStatus('ERROR', `Retrying in ${backoff/1000}s`);
+                    
+                    if (this.isPolling) setTimeout(() => this.poll(), backoff);
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // MAIN APPLICATION ORCHESTRATOR
+        // ---------------------------------------------------------
+        class App {
+            constructor() {
+                this.theme = new ThemeManager();
+                this.notify = new NotificationManager();
+                this.debug = new DebugManager();
+                this.charts = new ChartManager();
+                this.ui = new DashboardManager();
+                
+                this.api = new APIManager(
+                    (data, timestamp) => this.handleData(data, timestamp),
+                    (state, msg) => this.handleStatus(state, msg)
+                );
+
+                this.setupDOM();
+                this.startClock();
+
+                // Auto-connect if URL exists
+                if (this.api.baseUrl) {
+                    document.getElementById('api-url').value = this.api.baseUrl;
+                    this.api.connect();
+                }
+
+                if (window.lucide) lucide.createIcons();
+            }
+
+            setupDOM() {
+                const btnConnect = document.getElementById('btn-connect');
+                const btnDisconnect = document.getElementById('btn-disconnect');
+                const inputUrl = document.getElementById('api-url');
+
+                btnConnect.addEventListener('click', () => {
+                    const url = inputUrl.value.trim();
+                    if (!url) {
+                        this.notify.show('Please enter a backend URL', 'warning');
+                        return;
+                    }
+                    this.api.setBaseUrl(url);
+                    this.api.connect();
+                });
+
+                btnDisconnect.addEventListener('click', () => {
+                    this.api.disconnect();
+                });
+            }
+
+            handleStatus(state, msg) {
+                const dot = document.getElementById('conn-dot');
+                const text = document.getElementById('conn-text');
+                const btnConn = document.getElementById('btn-connect');
+                const btnDisc = document.getElementById('btn-disconnect');
+                const inpUrl = document.getElementById('api-url');
+
+                dot.className = 'dot'; // reset
+
+                if (state === 'CONNECTED') {
+                    dot.classList.add('live');
+                    text.textContent = 'Backend Connected';
+                    btnConn.classList.add('hidden');
+                    btnDisc.classList.remove('hidden');
+                    inpUrl.disabled = true;
+                } 
+                else if (state === 'CONNECTING') {
+                    dot.classList.add('connecting');
+                    text.textContent = 'Connecting...';
+                    btnConn.disabled = true;
+                    inpUrl.disabled = true;
+                }
+                else if (state === 'ERROR') {
+                    dot.classList.add('error');
+                    text.textContent = msg || 'Connection Lost';
+                    btnConn.classList.add('hidden');
+                    btnDisc.classList.remove('hidden'); // allow manual stop during retry
+                    this.notify.show(msg || 'Backend connection error', 'error');
+                }
+                else { // DISCONNECTED
+                    text.textContent = 'Disconnected';
+                    btnConn.classList.remove('hidden');
+                    btnDisc.classList.add('hidden');
+                    btnConn.disabled = false;
+                    inpUrl.disabled = false;
+                    this.ui.resetUI();
+                }
+            }
+
+            handleData(data, timestamp) {
+                if (!data) return;
+                
+                // Update timestamp UI
+                if (timestamp) {
+                    document.getElementById('last-update').textContent = Utils.formatTime(timestamp);
+                }
+
+                // Pass strictly parsed data to UI
+                this.ui.update(data);
+            }
+
+            startClock() {
+                const el = document.getElementById('sys-time');
+                setInterval(() => { el.textContent = Utils.formatTime(new Date()); }, 1000);
+                el.textContent = Utils.formatTime(new Date());
+            }
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new App();
+        });
+
+    </script>
+</body>
+</html>
