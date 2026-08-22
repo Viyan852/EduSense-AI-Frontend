@@ -1112,7 +1112,8 @@
                     emotions: getVal(['emotions', 'emotion_data', 'mood']),
                     
                     // Camera
-                    camera_url: getVal(['camera_url', 'stream_url', 'video_url', 'mjpeg_url']),
+                    camera_url: getVal(['camera_url', 'stream_url', 'video_url', 'mjpeg_url']) || 
+            (raw._backend_url ? `${raw._backend_url}/video` : null),
                     
                     // Arrays
                     faces: Array.isArray(getVal(['faces', 'recognized_faces', 'students_list'])) ? getVal(['faces', 'recognized_faces', 'students_list']) : [],
@@ -1478,10 +1479,12 @@
                     clearTimeout(timeoutId);
 
                     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-                    
                     const rawJson = await response.json();
                     
-                    this.retryCount = 0; // Reset retries on success
+// Inject backend URL for camera stream construction
+rawJson._backend_url = this.baseUrl;
+                    
+this.retryCount = 0; // Reset retries on success
                     this.lastUpdate = new Date();
                     
                     this.onStatus('CONNECTED');
